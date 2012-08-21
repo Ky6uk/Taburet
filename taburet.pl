@@ -24,15 +24,36 @@ my $socket = new IO::Socket::INET (
 
 my $watcher = EV::io $socket, EV::READ, sub {
     while ( my $line = <$socket> ) {
+        debug("socket readable");
+
         chomp $line;
-        print Dumper $line;
-        my $data = XMLin($line, KeepRoot => 1, ForceArray => 1);
-        print Dumper XMLout($data, KeepRoot => 1);
+        dispatch( XMLin($line, KeepRoot => 1, ForceArray => 1) );
     }
 };
 
 sub send_auth {
-    $socket->send("test\n");
+    my $xml = XMLout({
+        "stream:stream" => {
+            "to"           => "ky6uk.org",
+            "xmlns"        => "jabber:client",
+            "xmlns:stream" => "http://etherx.jabber.org/streams",
+            "version"      => "1.0"
+        }
+    }, KeepRoot => 1, XMLDecl => 1);
+
+    debug("send xml to socket");
+    $socket->send($xml);
+}
+
+sub dispatch {
+    my ($data) = @_;
+    debug("dispatching");
+
+    print Dumper $data;
+}
+
+sub debug {
+    say "DEBUG: " . join(", ", @_);
 }
 
 EV::run;
