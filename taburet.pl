@@ -8,11 +8,16 @@ use EV;
 use IO::Socket::INET;
 use XML::Simple;
 use Data::Dumper;
+use Module::Pluggable search_path => ['Plugin'];
+
+foreach my $plugin ( plugins ) {
+    eval { require $plugin };
+}
+
+exit 0;
 
 # flush after every write
 $| = 1;
-
-my $connection_state = 0;
 
 my $socket = new IO::Socket::INET (
     PeerHost => 'ky6uk.org',
@@ -20,7 +25,7 @@ my $socket = new IO::Socket::INET (
     Proto => 'tcp',
 ) or die "create socket exception: $!\n";
 
-&send_auth() unless $connection_state;
+&send_auth();
 
 my $watcher = EV::io $socket, EV::READ, sub {
     while ( my $line = <$socket> ) {
@@ -31,6 +36,7 @@ my $watcher = EV::io $socket, EV::READ, sub {
     }
 };
 
+# отправка авторизации
 sub send_auth {
     my $xml = XMLout({
         "stream:stream" => {
@@ -45,6 +51,7 @@ sub send_auth {
     $socket->send($xml);
 }
 
+# диспетчер ответов сервера
 sub dispatch {
     my ($data) = @_;
     debug("dispatching");
@@ -52,6 +59,7 @@ sub dispatch {
     print Dumper $data;
 }
 
+# простой вывод debug-строк
 sub debug {
     say "DEBUG: " . join(", ", @_);
 }
