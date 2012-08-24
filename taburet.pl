@@ -1,20 +1,17 @@
 #!/usr/bin/env perl
 
+use 5.01;
 use strict;
 use warnings;
-use 5.01;
 
 use EV;
-use IO::Socket::INET;
 use XML::Simple;
 use Data::Dumper;
-use Module::Pluggable search_path => ['Plugin'];
+use IO::Socket::INET;
 
-foreach my $plugin ( plugins ) {
-    eval { require $plugin };
-}
+use Taburet;
 
-exit 0;
+my $taburet = Taburet->new;
 
 # flush after every write
 $| = 1;
@@ -25,39 +22,23 @@ my $socket = new IO::Socket::INET (
     Proto => 'tcp',
 ) or die "create socket exception: $!\n";
 
-&send_auth();
+$socket->send(
+    XMLout({
+        "stream:stream" => {
+            "to"           => "ky6uk.org",
+            "xmlns:stream" => "http://etherx.jabber.org/streams"
+        }
+    }, KeepRoot => 1, XMLDecl => 1)
+);
 
 my $watcher = EV::io $socket, EV::READ, sub {
     while ( my $line = <$socket> ) {
         debug("socket readable");
-
         chomp $line;
-        dispatch( XMLin($line, KeepRoot => 1, ForceArray => 1) );
+
+        $taburet->process_xml($line);
     }
 };
-
-# отправка авторизации
-sub send_auth {
-    my $xml = XMLout({
-        "stream:stream" => {
-            "to"           => "ky6uk.org",
-            "xmlns"        => "jabber:client",
-            "xmlns:stream" => "http://etherx.jabber.org/streams",
-            "version"      => "1.0"
-        }
-    }, KeepRoot => 1, XMLDecl => 1);
-
-    debug("send xml to socket");
-    $socket->send($xml);
-}
-
-# диспетчер ответов сервера
-sub dispatch {
-    my ($data) = @_;
-    debug("dispatching");
-
-    print Dumper $data;
-}
 
 # простой вывод debug-строк
 sub debug {
