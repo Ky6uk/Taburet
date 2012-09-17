@@ -1,19 +1,11 @@
-package Taburet::Plugin::Test;
+package Taburet::Plugin::Stream;
+
+use Data::Dumper;
 
 Taburet->add_trigger(
-    "dir.add" => sub {
-        my ($class, $dirs) = @_;
-        push @$dirs, qw(e f);
+    "stream:stream" => sub {
+        print Dumper \@_;
     }
 );
-
-sub new {
-    my ($class) = @_;
-    my $self = {};
-
-    bless $self, $class;
-
-    return $self;
-}
 
 1;
