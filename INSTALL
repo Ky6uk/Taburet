@@ -1,2 +1,0 @@
-App::cpanminus
-	curl -L http://cpanmin.us | perl - --sudo App::cpanminus
