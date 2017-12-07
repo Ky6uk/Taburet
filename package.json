@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Ky6uk/Taburet/issues"
   },
-  "homepage": "https://github.com/Ky6uk/Taburet"
+  "homepage": "https://github.com/Ky6uk/Taburet",
+  "dependencies": {
+    "libxmljs": "^0.9.0"
+  }
 }
